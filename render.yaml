@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: tinytimes-api
+    env: node
+    plan: free
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        sync: false # paste your Supabase connection string in the Render dashboard
+      - key: JWT_SECRET
+        generateValue: true
+      - key: PGSSL
+        value: "true"
+      - key: CORS_ORIGIN
+        sync: false # paste your Vercel URL here once you have it, e.g. https://your-app.vercel.app
