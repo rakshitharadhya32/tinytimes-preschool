@@ -3,6 +3,8 @@ const { eq, and, or, isNull, desc } = require('drizzle-orm');
 const { db, schema } = require('../db');
 const { requireAuth, requireRole } = require('../middleware/auth');
 const { upload } = require('../utils/upload');
+const { storeFile } = require('../utils/mediaStorage');
+const { notifyNewMessage } = require('../utils/push');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -59,7 +61,7 @@ router.post('/', requireRole('admin', 'staff'), upload.single('photo'), async (r
   try {
     const { title, body, classroom, studentId } = req.body;
     if (!body) return res.status(400).json({ error: 'body is required' });
-    const photoUrl = req.file ? `/uploads/${req.file.filename}` : null;
+    const photoUrl = req.file ? await storeFile(req.file) : null;
 
     const [created] = await db
       .insert(schema.messages)
@@ -74,6 +76,10 @@ router.post('/', requireRole('admin', 'staff'), upload.single('photo'), async (r
       })
       .returning();
     res.status(201).json(created);
+
+    // Push notifications are best-effort — never let a notification failure affect the
+    // already-saved, already-responded-to announcement.
+    notifyNewMessage(created).catch((err) => console.error('Push notify failed:', err));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to post message' });

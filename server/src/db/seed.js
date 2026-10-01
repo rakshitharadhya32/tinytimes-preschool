@@ -38,7 +38,34 @@ async function seed() {
     })
     .returning();
 
-  const classrooms = ['Sunflower Room', 'Daisy Room', 'Marigold Room'];
+  const [staff2] = await db
+    .insert(schema.users)
+    .values({
+      schoolId: school.id,
+      name: 'Rohan Das',
+      email: 'staff2@tinytimes.demo',
+      passwordHash,
+      role: 'staff',
+      title: 'Lead Teacher, Daisy Room',
+      phone: '+91 90000 00004',
+    })
+    .returning();
+
+  // ---------- Classrooms (first-class, with capacity + assigned teacher) ----------
+  const classroomDefs = [
+    { name: 'Sunflower Room', capacity: 12, teacherId: staff1.id, color: '#f97316' },
+    { name: 'Daisy Room', capacity: 10, teacherId: staff2.id, color: '#0ea5a4' },
+    { name: 'Marigold Room', capacity: 10, teacherId: null, color: '#eab308' },
+  ];
+  const classroomRows = [];
+  for (const def of classroomDefs) {
+    const [row] = await db
+      .insert(schema.classrooms)
+      .values({ schoolId: school.id, ...def })
+      .returning();
+    classroomRows.push(row);
+  }
+
   const stages = ['inquiry', 'tour_scheduled', 'enrolled', 'enrolled', 'enrolled', 'waitlisted'];
   const firstNames = ['Aarav', 'Diya', 'Ishaan', 'Myra', 'Vihaan', 'Ananya', 'Kabir', 'Saanvi', 'Reyansh', 'Aadhya', 'Arjun', 'Zara'];
   const lastNames = ['Sharma', 'Patel', 'Reddy', 'Gupta', 'Iyer', 'Menon', 'Khan', 'Chatterjee'];
@@ -46,6 +73,7 @@ async function seed() {
   const students = [];
   for (let i = 0; i < 12; i++) {
     const stage = stages[i % stages.length];
+    const classroomRow = stage === 'enrolled' ? classroomRows[i % classroomRows.length] : null;
     const [student] = await db
       .insert(schema.students)
       .values({
@@ -54,7 +82,8 @@ async function seed() {
         lastName: lastNames[i % lastNames.length],
         dob: `202${1 + (i % 3)}-0${1 + (i % 9) % 9}-1${i % 9}`,
         gender: i % 2 === 0 ? 'Female' : 'Male',
-        classroom: stage === 'enrolled' ? classrooms[i % classrooms.length] : null,
+        classroomId: classroomRow ? classroomRow.id : null,
+        classroom: classroomRow ? classroomRow.name : null,
         stage,
         allergies: i % 5 === 0 ? 'Peanuts' : null,
         notes: null,
@@ -114,6 +143,64 @@ async function seed() {
       body: `${enrolled[0]?.firstName} had a wonderful day, shared toys nicely during free play and took a full nap.`,
     },
   ]);
+
+  // ---------- Billing ----------
+  const [monthlyTuition] = await db
+    .insert(schema.feePlans)
+    .values({
+      schoolId: school.id,
+      name: 'Monthly Tuition',
+      amount: '8500.00',
+      frequency: 'monthly',
+      description: 'Standard full-day monthly tuition fee.',
+    })
+    .returning();
+
+  const [annualActivity] = await db
+    .insert(schema.feePlans)
+    .values({
+      schoolId: school.id,
+      name: 'Annual Activity Fee',
+      amount: '3000.00',
+      frequency: 'annual',
+      description: 'Covers field trips, art supplies, and sports day.',
+    })
+    .returning();
+
+  const addDays = (days) => {
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    return d.toISOString().slice(0, 10);
+  };
+
+  for (let i = 0; i < enrolled.length; i++) {
+    const s = enrolled[i];
+    // Mix of paid, unpaid (due soon), and overdue invoices for a realistic-looking demo.
+    const dueDate = i % 3 === 0 ? addDays(-10) : addDays(10 + i);
+    const status = i % 3 === 1 ? 'paid' : 'unpaid';
+    await db.insert(schema.invoices).values({
+      schoolId: school.id,
+      studentId: s.id,
+      feePlanId: monthlyTuition.id,
+      description: monthlyTuition.name,
+      amount: monthlyTuition.amount,
+      status,
+      dueDate,
+      paidDate: status === 'paid' ? today : null,
+    });
+  }
+  // One annual activity fee invoice for the demo parent's first child
+  if (enrolled[0]) {
+    await db.insert(schema.invoices).values({
+      schoolId: school.id,
+      studentId: enrolled[0].id,
+      feePlanId: annualActivity.id,
+      description: annualActivity.name,
+      amount: annualActivity.amount,
+      status: 'unpaid',
+      dueDate: addDays(30),
+    });
+  }
 
   console.log('Seed complete.');
   console.log('Demo logins (password: password123):');

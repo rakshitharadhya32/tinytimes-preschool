@@ -18,7 +18,7 @@ export default function ParentChildren() {
 
   return (
     <div className="space-y-4 p-4">
-      <h1 className="mb-1 text-lg font-semibold text-slate-800">My kids</h1>
+      <h1 className="font-heading mb-1 text-lg font-semibold text-slate-800">My kids</h1>
       {students.map((s) => (
         <div key={s.id} className="rounded-2xl bg-white p-4 shadow-sm">
           <p className="font-semibold text-slate-800">

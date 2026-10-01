@@ -10,7 +10,7 @@ export default function ParentFeed() {
 
   return (
     <div className="space-y-3 p-4">
-      <h1 className="mb-1 text-lg font-semibold text-slate-800">Feed</h1>
+      <h1 className="font-heading mb-1 text-lg font-semibold text-slate-800">Feed</h1>
       {messages.map((m) => (
         <div key={m.id} className="rounded-2xl bg-white p-4 shadow-sm">
           <p className="text-sm font-medium text-slate-800">{m.title || 'Update'}</p>

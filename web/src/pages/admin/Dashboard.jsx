@@ -27,7 +27,7 @@ export default function Dashboard() {
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6">
       <div>
-        <h1 className="text-2xl font-semibold text-slate-800">Good day 👋</h1>
+        <h1 className="font-heading text-2xl font-semibold text-slate-800">Good day 👋</h1>
         <p className="text-sm text-slate-400">Here's what's happening at your school today.</p>
       </div>
 

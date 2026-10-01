@@ -11,11 +11,12 @@ const columns = [
 ];
 
 function emptyForm() {
-  return { firstName: '', lastName: '', dob: '', gender: '', classroom: '' };
+  return { firstName: '', lastName: '', dob: '', gender: '', classroomId: '' };
 }
 
 export default function Enrollment() {
   const [students, setStudents] = useState([]);
+  const [classrooms, setClassrooms] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm());
   const [dragId, setDragId] = useState(null);
@@ -23,6 +24,7 @@ export default function Enrollment() {
 
   function load() {
     api.get('/students').then((res) => setStudents(res.data));
+    api.get('/classrooms').then((res) => setClassrooms(res.data));
   }
 
   useEffect(load, []);
@@ -49,7 +51,7 @@ export default function Enrollment() {
     <div className="p-4 md:p-6">
       <div className="mb-5 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-800">Enrollment pipeline</h1>
+          <h1 className="font-heading text-2xl font-semibold text-slate-800">Enrollment pipeline</h1>
           <p className="text-sm text-slate-400">Drag a card to move it through the pipeline.</p>
         </div>
         <button
@@ -128,7 +130,7 @@ export default function Enrollment() {
         <div className="fixed inset-0 z-20 flex items-center justify-center bg-slate-900/40 p-4">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-slate-800">New inquiry</h2>
+              <h2 className="font-heading text-lg font-semibold text-slate-800">New inquiry</h2>
               <button onClick={() => setShowForm(false)} className="text-slate-400 hover:text-slate-600">
                 <X size={18} />
               </button>
@@ -168,12 +170,18 @@ export default function Enrollment() {
                   <option>Other</option>
                 </select>
               </div>
-              <input
-                placeholder="Classroom (optional)"
-                value={form.classroom}
-                onChange={(e) => setForm({ ...form, classroom: e.target.value })}
+              <select
+                value={form.classroomId}
+                onChange={(e) => setForm({ ...form, classroomId: e.target.value })}
                 className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-              />
+              >
+                <option value="">Classroom (optional)</option>
+                {classrooms.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
               <button
                 disabled={saving}
                 className="w-full rounded-xl bg-brand-500 py-2.5 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-60"

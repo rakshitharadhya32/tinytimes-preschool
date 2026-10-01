@@ -4,6 +4,7 @@ const { eq, and } = require('drizzle-orm');
 const { db, schema } = require('../db');
 const { requireAuth, requireRole } = require('../middleware/auth');
 const { upload } = require('../utils/upload');
+const { storeFile } = require('../utils/mediaStorage');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -47,6 +48,17 @@ router.get('/:id', async (req, res) => {
   res.json(student);
 });
 
+// Resolve a classroomId into its current name, so students.classroom (the legacy text label
+// still used by attendance grouping and announcement targeting) always stays in sync.
+async function resolveClassroomName(classroomId, schoolId) {
+  if (!classroomId) return null;
+  const [row] = await db
+    .select()
+    .from(schema.classrooms)
+    .where(and(eq(schema.classrooms.id, Number(classroomId)), eq(schema.classrooms.schoolId, schoolId)));
+  return row ? row.name : null;
+}
+
 // Create a new inquiry / student (admin, staff)
 router.post('/', requireRole('admin', 'staff'), async (req, res) => {
   try {
@@ -55,7 +67,7 @@ router.post('/', requireRole('admin', 'staff'), async (req, res) => {
       lastName,
       dob,
       gender,
-      classroom,
+      classroomId,
       stage,
       allergies,
       notes,
@@ -63,6 +75,7 @@ router.post('/', requireRole('admin', 'staff'), async (req, res) => {
     if (!firstName || !lastName) {
       return res.status(400).json({ error: 'firstName and lastName are required' });
     }
+    const classroomName = await resolveClassroomName(classroomId, req.user.schoolId);
     const [created] = await db
       .insert(schema.students)
       .values({
@@ -71,7 +84,8 @@ router.post('/', requireRole('admin', 'staff'), async (req, res) => {
         lastName,
         dob: dob || null,
         gender: gender || null,
-        classroom: classroom || null,
+        classroomId: classroomId ? Number(classroomId) : null,
+        classroom: classroomName,
         stage: stage || 'inquiry',
         allergies: allergies || null,
         notes: notes || null,
@@ -93,7 +107,7 @@ router.patch('/:id', requireRole('admin', 'staff'), async (req, res) => {
       'lastName',
       'dob',
       'gender',
-      'classroom',
+      'classroomId',
       'stage',
       'allergies',
       'notes',
@@ -102,6 +116,10 @@ router.patch('/:id', requireRole('admin', 'staff'), async (req, res) => {
     const updates = { updatedAt: new Date() };
     for (const key of allowed) {
       if (key in req.body) updates[key] = req.body[key];
+    }
+    if ('classroomId' in updates) {
+      updates.classroom = await resolveClassroomName(updates.classroomId, req.user.schoolId);
+      updates.classroomId = updates.classroomId ? Number(updates.classroomId) : null;
     }
     const [updated] = await db
       .update(schema.students)
@@ -125,15 +143,20 @@ router.delete('/:id', requireRole('admin'), async (req, res) => {
 });
 
 router.post('/:id/photo', requireRole('admin', 'staff'), upload.single('photo'), async (req, res) => {
-  const id = Number(req.params.id);
-  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-  const photoUrl = `/uploads/${req.file.filename}`;
-  const [updated] = await db
-    .update(schema.students)
-    .set({ photoUrl, updatedAt: new Date() })
-    .where(eq(schema.students.id, id))
-    .returning();
-  res.json(updated);
+  try {
+    const id = Number(req.params.id);
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+    const photoUrl = await storeFile(req.file);
+    const [updated] = await db
+      .update(schema.students)
+      .set({ photoUrl, updatedAt: new Date() })
+      .where(eq(schema.students.id, id))
+      .returning();
+    res.json(updated);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to upload photo' });
+  }
 });
 
 // ---------- Guardians (parent links) ----------

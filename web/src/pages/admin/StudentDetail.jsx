@@ -7,6 +7,7 @@ export default function StudentDetail() {
   const { id } = useParams();
   const [student, setStudent] = useState(null);
   const [form, setForm] = useState(null);
+  const [classrooms, setClassrooms] = useState([]);
   const [guardians, setGuardians] = useState([]);
   const [history, setHistory] = useState([]);
   const [showGuardianForm, setShowGuardianForm] = useState(false);
@@ -20,14 +21,15 @@ export default function StudentDetail() {
     });
     api.get(`/students/${id}/guardians`).then((res) => setGuardians(res.data));
     api.get(`/attendance/history/${id}`).then((res) => setHistory(res.data));
+    api.get('/classrooms').then((res) => setClassrooms(res.data));
   }
 
   useEffect(loadAll, [id]);
 
   async function saveStudent(e) {
     e.preventDefault();
-    const { firstName, lastName, dob, gender, classroom, allergies, notes, stage } = form;
-    await api.patch(`/students/${id}`, { firstName, lastName, dob, gender, classroom, allergies, notes, stage });
+    const { firstName, lastName, dob, gender, classroomId, allergies, notes, stage } = form;
+    await api.patch(`/students/${id}`, { firstName, lastName, dob, gender, classroomId: classroomId || null, allergies, notes, stage });
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
   }
@@ -53,7 +55,7 @@ export default function StudentDetail() {
         <ArrowLeft size={16} /> Back to students
       </Link>
 
-      <h1 className="mb-4 text-2xl font-semibold text-slate-800">
+      <h1 className="font-heading mb-4 text-2xl font-semibold text-slate-800">
         {student.firstName} {student.lastName}
       </h1>
 
@@ -87,11 +89,18 @@ export default function StudentDetail() {
           </div>
           <div>
             <label className="mb-1 block text-xs text-slate-500">Classroom</label>
-            <input
-              value={form.classroom || ''}
-              onChange={(e) => setForm({ ...form, classroom: e.target.value })}
+            <select
+              value={form.classroomId || ''}
+              onChange={(e) => setForm({ ...form, classroomId: e.target.value })}
               className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-            />
+            >
+              <option value="">Unassigned</option>
+              {classrooms.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="mb-1 block text-xs text-slate-500">Stage</label>

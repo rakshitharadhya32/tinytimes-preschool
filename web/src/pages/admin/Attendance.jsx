@@ -47,7 +47,7 @@ export default function Attendance() {
     <div className="p-4 md:p-6">
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-800">Attendance</h1>
+          <h1 className="font-heading text-2xl font-semibold text-slate-800">Attendance</h1>
           <p className="text-sm text-slate-400">{date && new Date(date).toDateString()}</p>
         </div>
         <select

@@ -9,10 +9,19 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
+      // injectManifest (rather than the default generateSW) lets our own src/sw.js add a
+      // `push` / `notificationclick` listener for parent announcement notifications, while
+      // still precaching the app shell for offline/installed use.
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.js',
+      injectManifest: {
+        globPatterns: ['**/*.{js,css,html,png,svg,ico}'],
+      },
       registerType: 'autoUpdate',
       includeAssets: ['favicon.png', 'logo-wordmark.png'],
       manifest: {
-        name: 'TinyTimes Preschool',
+        name: 'Ankura — TinyTimes Preschool',
         short_name: 'TinyTimes',
         description: 'School & childcare management, in your pocket.',
         theme_color: '#f97316',

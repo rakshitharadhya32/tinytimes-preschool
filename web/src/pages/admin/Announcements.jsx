@@ -48,7 +48,7 @@ export default function Announcements() {
 
   return (
     <div className="mx-auto max-w-3xl p-4 md:p-6">
-      <h1 className="mb-1 text-2xl font-semibold text-slate-800">Announcements</h1>
+      <h1 className="font-heading mb-1 text-2xl font-semibold text-slate-800">Announcements</h1>
       <p className="mb-5 text-sm text-slate-400">Share updates with the whole school, a classroom, or one family.</p>
 
       <form onSubmit={send} className="mb-8 space-y-3 rounded-2xl border border-slate-200 bg-white p-5">

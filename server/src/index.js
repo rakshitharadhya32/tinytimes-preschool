@@ -10,6 +10,9 @@ const staffRoutes = require('./routes/staff');
 const attendanceRoutes = require('./routes/attendance');
 const messageRoutes = require('./routes/messages');
 const dashboardRoutes = require('./routes/dashboard');
+const classroomRoutes = require('./routes/classrooms');
+const pushRoutes = require('./routes/push');
+const billingRoutes = require('./routes/billing');
 
 const app = express();
 
@@ -39,6 +42,9 @@ app.use('/api/staff', staffRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/classrooms', classroomRoutes);
+app.use('/api/push', pushRoutes);
+app.use('/api/billing', billingRoutes);
 
 // Serve the built frontend (web/dist) if it exists, so the whole app can run
 // behind a single port/URL. Falls back to index.html for client-side routes.

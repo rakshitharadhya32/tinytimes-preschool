@@ -19,28 +19,38 @@ card required.
   Waitlisted → Withdrawn.
 - **Student records** — profile, classroom, allergies/notes, linked guardian (parent) accounts,
   attendance history.
+- **Classrooms** — capacity, assigned teacher, live roster count and color coding; students are
+  assigned via a dropdown rather than free text.
 - **Staff records** — admin can create/manage staff & admin accounts.
 - **Attendance** — one-tap check-in / check-out board, grouped by classroom, live status dots.
 - **Announcements** — post to the whole school, a classroom, or a single family, with optional
-  photo attachment; parents see a filtered feed.
+  photo attachment; parents see a filtered feed, and get a push notification if they've enabled
+  one.
+- **Billing/invoicing** — fee plans and per-student invoices, admin marks paid/unpaid, parents
+  see a read-only billing view for their own children.
+- **Push notifications** — parents can opt in from a bell icon in the app header; an installable
+  service worker delivers a notification the moment a relevant announcement is posted.
+- **Persistent photo storage** — uploaded photos go to Supabase Storage when configured (falls
+  back to local disk for development), so they survive redeploys in production.
 - **Parent app** — mobile-first, installable as a PWA (Add to Home Screen), showing each
-  child's live attendance status and the message feed for their family/classroom/school.
+  child's live attendance status, the message feed, and billing for their family/classroom/school.
 - **Dashboard** — quick counts: enrolled students, present today, pipeline breakdown, recent
   announcements.
 
 ## Not included (out of scope for this first slice)
 
-Billing/invoicing, health & meal tracking beyond allergies, bus tracking, multi-language,
-white-labeling, and multi-school/franchise support. The data model (see `server/src/db/schema.js`)
-was kept simple on purpose so these are straightforward to layer on later.
+Health & meal tracking beyond allergies, bus tracking, multi-language, white-labeling, and
+multi-school/franchise support. The data model (see `server/src/db/schema.js`) was kept simple
+on purpose so these are straightforward to layer on later.
 
 ## Tech stack
 
 - **Backend**: Node.js, Express, PostgreSQL, [Drizzle ORM](https://orm.drizzle.team/) (chosen
   over Prisma because Prisma's engine binaries couldn't be downloaded in the sandboxed build
   environment — Drizzle is pure JS and has no such dependency), JWT auth, bcrypt, multer for
-  photo uploads.
-- **Frontend**: React 19 + Vite, React Router, Tailwind CSS v4, `vite-plugin-pwa`.
+  photo uploads (Supabase Storage in production, see DEPLOY.md), `web-push` for notifications.
+- **Frontend**: React 19 + Vite, React Router, Tailwind CSS v4 (warm/playful theme — Baloo 2 +
+  Nunito via Google Fonts), `vite-plugin-pwa` (custom service worker for push notifications).
 
 ## Project structure
 

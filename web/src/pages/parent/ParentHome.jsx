@@ -17,7 +17,7 @@ export default function ParentHome() {
     <div className="space-y-5 p-4">
       <div>
         <p className="text-sm text-slate-400">Welcome back, {user?.name?.split(' ')[0]}</p>
-        <h1 className="text-lg font-semibold text-slate-800">Today</h1>
+        <h1 className="font-heading text-lg font-semibold text-slate-800">Today</h1>
         <p className="text-sm text-slate-400">{new Date().toDateString()}</p>
       </div>
 

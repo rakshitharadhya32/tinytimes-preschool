@@ -42,7 +42,7 @@ export default function Staff() {
     <div className="p-4 md:p-6">
       <div className="mb-5 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-800">Staff</h1>
+          <h1 className="font-heading text-2xl font-semibold text-slate-800">Staff</h1>
           <p className="text-sm text-slate-400">{staff.length} team members</p>
         </div>
         {user?.role === 'admin' && (
@@ -87,7 +87,7 @@ export default function Staff() {
         <div className="fixed inset-0 z-20 flex items-center justify-center bg-slate-900/40 p-4">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-slate-800">Add staff member</h2>
+              <h2 className="font-heading text-lg font-semibold text-slate-800">Add staff member</h2>
               <button onClick={() => setShowForm(false)} className="text-slate-400 hover:text-slate-600">
                 <X size={18} />
               </button>

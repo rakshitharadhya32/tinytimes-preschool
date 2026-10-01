@@ -1,30 +1,76 @@
+import { useEffect, useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { Home, Newspaper, Users, LogOut } from 'lucide-react';
+import { Home, Newspaper, Users, Receipt, LogOut, Bell, BellOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { pushSupported, getPushStatus, enablePush, disablePush } from '../lib/push';
 
 const navItems = [
   { to: '/parent', label: 'Home', icon: Home, end: true },
   { to: '/parent/feed', label: 'Feed', icon: Newspaper },
   { to: '/parent/children', label: 'My Kids', icon: Users },
+  { to: '/parent/billing', label: 'Billing', icon: Receipt },
 ];
 
 export default function ParentLayout() {
   const { user, logout } = useAuth();
+  const [pushOn, setPushOn] = useState(false);
+  const [pushBusy, setPushBusy] = useState(false);
+  const [pushError, setPushError] = useState('');
+
+  useEffect(() => {
+    if (!pushSupported()) return;
+    getPushStatus().then((s) => setPushOn(s.subscribed));
+  }, []);
+
+  async function togglePush() {
+    setPushBusy(true);
+    setPushError('');
+    try {
+      if (pushOn) {
+        await disablePush();
+        setPushOn(false);
+      } else {
+        await enablePush();
+        setPushOn(true);
+      }
+    } catch (err) {
+      setPushError(err.message || 'Could not update notification settings');
+    } finally {
+      setPushBusy(false);
+    }
+  }
 
   return (
-    <div className="mx-auto flex h-screen max-w-md flex-col bg-brand-50">
-      <header className="flex items-center justify-between bg-white px-4 py-3 shadow-sm">
+    <div className="relative mx-auto flex h-screen max-w-md flex-col overflow-hidden bg-gradient-to-b from-brand-50 to-sprout-50">
+      <header className="relative z-10 flex items-center justify-between bg-white px-4 py-3 shadow-sm">
         <img src="/logo-wordmark.png" alt="TinyTimes Preschool" className="h-9 w-auto" />
-        <button
-          onClick={logout}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500"
-          aria-label="Sign out"
-        >
-          <LogOut size={16} />
-        </button>
+        <div className="flex items-center gap-2">
+          {pushSupported() && (
+            <button
+              onClick={togglePush}
+              disabled={pushBusy}
+              title={pushOn ? 'Notifications on — tap to turn off' : 'Turn on notifications'}
+              className={`flex h-9 w-9 items-center justify-center rounded-full transition ${
+                pushOn ? 'bg-brand-100 text-brand-600' : 'bg-slate-100 text-slate-400'
+              } disabled:opacity-50`}
+            >
+              {pushOn ? <Bell size={16} /> : <BellOff size={16} />}
+            </button>
+          )}
+          <button
+            onClick={logout}
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500"
+            aria-label="Sign out"
+          >
+            <LogOut size={16} />
+          </button>
+        </div>
       </header>
+      {pushError && (
+        <p className="relative z-10 bg-red-50 px-4 py-1.5 text-center text-xs text-red-500">{pushError}</p>
+      )}
 
-      <main className="flex-1 overflow-y-auto pb-24">
+      <main className="relative z-10 flex-1 overflow-y-auto pb-24">
         <Outlet />
       </main>
 
@@ -35,12 +81,12 @@ export default function ParentLayout() {
             to={to}
             end={end}
             className={({ isActive }) =>
-              `flex flex-col items-center gap-1 rounded-xl px-5 py-1.5 text-[11px] font-medium ${
+              `flex flex-col items-center gap-1 rounded-xl px-4 py-1.5 text-[11px] font-semibold ${
                 isActive ? 'text-brand-600' : 'text-slate-400'
               }`
             }
           >
-            <Icon size={22} />
+            <Icon size={21} />
             {label}
           </NavLink>
         ))}

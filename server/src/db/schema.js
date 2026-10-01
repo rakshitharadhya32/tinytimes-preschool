@@ -7,6 +7,8 @@ const {
   integer,
   date,
   time,
+  boolean,
+  numeric,
   pgEnum,
 } = require('drizzle-orm/pg-core');
 const { relations } = require('drizzle-orm');
@@ -20,6 +22,8 @@ const enrollmentStageEnum = pgEnum('enrollment_stage', [
   'waitlisted',
   'withdrawn',
 ]);
+const feeFrequencyEnum = pgEnum('fee_frequency', ['one_time', 'monthly', 'quarterly', 'annual']);
+const invoiceStatusEnum = pgEnum('invoice_status', ['unpaid', 'paid', 'overdue', 'cancelled']);
 
 // ---------- Tables ----------
 const schools = pgTable('schools', {
@@ -41,6 +45,17 @@ const users = pgTable('users', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+// Classrooms as a first-class concept: capacity, assigned teacher, a color for UI chips.
+const classrooms = pgTable('classrooms', {
+  id: serial('id').primaryKey(),
+  schoolId: integer('school_id').references(() => schools.id).notNull(),
+  name: varchar('name', { length: 120 }).notNull(),
+  capacity: integer('capacity'),
+  teacherId: integer('teacher_id').references(() => users.id),
+  color: varchar('color', { length: 20 }).default('#f97316'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
 const students = pgTable('students', {
   id: serial('id').primaryKey(),
   schoolId: integer('school_id').references(() => schools.id).notNull(),
@@ -48,7 +63,10 @@ const students = pgTable('students', {
   lastName: varchar('last_name', { length: 120 }).notNull(),
   dob: date('dob'),
   gender: varchar('gender', { length: 30 }),
+  // Deprecated free-text classroom name — kept for backward compatibility with existing data;
+  // new code should use classroomId. Nullable, no longer written by new code paths.
   classroom: varchar('classroom', { length: 120 }),
+  classroomId: integer('classroom_id').references(() => classrooms.id),
   stage: enrollmentStageEnum('stage').notNull().default('inquiry'),
   allergies: text('allergies'),
   notes: text('notes'),
@@ -89,17 +107,62 @@ const messages = pgTable('messages', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+// Web push subscriptions — one row per browser/device a parent (or staff) enabled notifications on.
+const pushSubscriptions = pgTable('push_subscriptions', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  endpoint: text('endpoint').notNull().unique(),
+  p256dh: text('p256dh').notNull(),
+  auth: text('auth').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// ---------- Billing ----------
+const feePlans = pgTable('fee_plans', {
+  id: serial('id').primaryKey(),
+  schoolId: integer('school_id').references(() => schools.id).notNull(),
+  name: varchar('name', { length: 150 }).notNull(),
+  amount: numeric('amount', { precision: 10, scale: 2 }).notNull(),
+  frequency: feeFrequencyEnum('frequency').notNull().default('monthly'),
+  description: text('description'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+const invoices = pgTable('invoices', {
+  id: serial('id').primaryKey(),
+  schoolId: integer('school_id').references(() => schools.id).notNull(),
+  studentId: integer('student_id').references(() => students.id, { onDelete: 'cascade' }).notNull(),
+  feePlanId: integer('fee_plan_id').references(() => feePlans.id),
+  description: varchar('description', { length: 255 }).notNull(),
+  amount: numeric('amount', { precision: 10, scale: 2 }).notNull(),
+  status: invoiceStatusEnum('status').notNull().default('unpaid'),
+  issuedDate: date('issued_date').defaultNow().notNull(),
+  dueDate: date('due_date').notNull(),
+  paidDate: date('paid_date'),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
 // ---------- Relations (for query convenience) ----------
 const usersRelations = relations(users, ({ many, one }) => ({
   school: one(schools, { fields: [users.schoolId], references: [schools.id] }),
   guardianLinks: many(guardians),
+  pushSubscriptions: many(pushSubscriptions),
+}));
+
+const classroomsRelations = relations(classrooms, ({ one, many }) => ({
+  school: one(schools, { fields: [classrooms.schoolId], references: [schools.id] }),
+  teacher: one(users, { fields: [classrooms.teacherId], references: [users.id] }),
+  students: many(students),
 }));
 
 const studentsRelations = relations(students, ({ many, one }) => ({
   school: one(schools, { fields: [students.schoolId], references: [schools.id] }),
+  classroomRef: one(classrooms, { fields: [students.classroomId], references: [classrooms.id] }),
   guardianLinks: many(guardians),
   attendance: many(attendance),
   messages: many(messages),
+  invoices: many(invoices),
 }));
 
 const guardiansRelations = relations(guardians, ({ one }) => ({
@@ -116,18 +179,41 @@ const messagesRelations = relations(messages, ({ one }) => ({
   author: one(users, { fields: [messages.authorId], references: [users.id] }),
 }));
 
+const pushSubscriptionsRelations = relations(pushSubscriptions, ({ one }) => ({
+  user: one(users, { fields: [pushSubscriptions.userId], references: [users.id] }),
+}));
+
+const feePlansRelations = relations(feePlans, ({ many }) => ({
+  invoices: many(invoices),
+}));
+
+const invoicesRelations = relations(invoices, ({ one }) => ({
+  student: one(students, { fields: [invoices.studentId], references: [students.id] }),
+  feePlan: one(feePlans, { fields: [invoices.feePlanId], references: [feePlans.id] }),
+}));
+
 module.exports = {
   roleEnum,
   enrollmentStageEnum,
+  feeFrequencyEnum,
+  invoiceStatusEnum,
   schools,
   users,
+  classrooms,
   students,
   guardians,
   attendance,
   messages,
+  pushSubscriptions,
+  feePlans,
+  invoices,
   usersRelations,
+  classroomsRelations,
   studentsRelations,
   guardiansRelations,
   attendanceRelations,
   messagesRelations,
+  pushSubscriptionsRelations,
+  feePlansRelations,
+  invoicesRelations,
 };

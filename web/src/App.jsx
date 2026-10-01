@@ -12,10 +12,13 @@ import StudentDetail from './pages/admin/StudentDetail';
 import Staff from './pages/admin/Staff';
 import Attendance from './pages/admin/Attendance';
 import Announcements from './pages/admin/Announcements';
+import Classrooms from './pages/admin/Classrooms';
+import Billing from './pages/admin/Billing';
 
 import ParentHome from './pages/parent/ParentHome';
 import ParentFeed from './pages/parent/ParentFeed';
 import ParentChildren from './pages/parent/ParentChildren';
+import ParentBilling from './pages/parent/ParentBilling';
 
 function RootRedirect() {
   const { user, loading } = useAuth();
@@ -47,6 +50,8 @@ export default function App() {
             <Route path="staff" element={<Staff />} />
             <Route path="attendance" element={<Attendance />} />
             <Route path="announcements" element={<Announcements />} />
+            <Route path="classrooms" element={<Classrooms />} />
+            <Route path="billing" element={<Billing />} />
           </Route>
 
           <Route
@@ -60,6 +65,7 @@ export default function App() {
             <Route index element={<ParentHome />} />
             <Route path="feed" element={<ParentFeed />} />
             <Route path="children" element={<ParentChildren />} />
+            <Route path="billing" element={<ParentBilling />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

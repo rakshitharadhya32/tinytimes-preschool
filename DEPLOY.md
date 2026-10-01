@@ -125,15 +125,59 @@ Open your Vercel URL and log in with the seeded demo accounts (password `passwor
 
 ---
 
+## 8. Updating an already-deployed app with classrooms, billing, persistent photos & push
+
+If you already have this app deployed and are applying the patch that adds classrooms,
+billing/invoicing, Supabase Storage for photos, and parent push notifications, do these steps
+in order:
+
+1. **Pull in the code** — apply the patch / pull the latest commit, then push to `main` as
+   usual (Render and Vercel will redeploy automatically).
+2. **Update the live database schema**, from your own machine, same as the original setup:
+   ```bash
+   cd server
+   npm install        # picks up the new web-push dependency
+   npm run db:push    # adds the classrooms/push_subscriptions/fee_plans/invoices tables
+                       # and the students.classroom_id column — existing data is untouched
+   node src/db/migrate-v2.js   # backfills classrooms from existing data + adds demo fee plans
+   ```
+   `migrate-v2.js` is safe to run more than once — it only creates rows that don't already
+   exist, so re-running it after a mistake won't duplicate anything.
+3. **Set up Supabase Storage for persistent photos** (optional but recommended — otherwise
+   uploaded photos keep disappearing on every Render redeploy, as before):
+   - In your Supabase project, go to **Storage** → **New bucket**. Name it `media`, and toggle
+     **Public bucket** on (so uploaded photos are viewable without extra auth).
+   - In Supabase **Project Settings → API**, copy the **Project URL** and the
+     **`service_role` secret key** (not the `anon` public key — this one needs write access).
+   - On Render, open the `tinytimes-api` service → **Environment**, and add:
+     ```
+     SUPABASE_URL = <your Project URL>
+     SUPABASE_SERVICE_ROLE_KEY = <your service_role secret key>
+     SUPABASE_BUCKET = media
+     ```
+   - Save — Render redeploys. New photo uploads now go to Supabase Storage and survive
+     redeploys; nothing needs to change on the frontend.
+4. **Turn on push notifications for parents** (optional):
+   - Generate a VAPID keypair once (either run `node -e "console.log(require('web-push').generateVAPIDKeys())"`
+     from the `server` folder yourself, or use this one generated for you — fine to use directly
+     for a demo, but treat `VAPID_PRIVATE_KEY` as a secret):
+     ```
+     VAPID_PUBLIC_KEY=BFkXhgYCqfqHErG0Dyjb-agFnE6wj661nFLafcvphQeyGx3mAMZXQzdtmH5o5IO9-MXH7KyaLXwuuXbZJUFYTC8
+     VAPID_PRIVATE_KEY=eALvMp4vYV5PDI2Ua5oKBORCUbwwC6Te2rMiIaSjGvA
+     ```
+   - On Render, add those two plus `VAPID_SUBJECT = mailto:your-email@example.com` as
+     environment variables, and save (triggers a redeploy).
+   - That's it — no new Vercel env var needed. The frontend fetches the public key from the API
+     at runtime (`GET /api/push/vapid-public-key`), so nothing has to be baked in at build time.
+   - Parents turn notifications on themselves from the bell icon in the app header; it quietly
+     does nothing (no errors) if these env vars are left unset.
+
 ## Known free-tier limitations
 
 - **Cold starts**: Render's free web service sleeps after 15 minutes of inactivity; the first
   request after that takes 30–50 seconds to wake it up.
-- **Uploaded photos are not persistent**: Render's free tier has an ephemeral filesystem, so
-  photos uploaded via Announcements (or student profile photos) are lost on redeploy or when the
-  service restarts. For a real deployment, swap the local disk storage in
-  `server/src/utils/upload.js` for Supabase Storage (or S3/Cloudinary) — the rest of the app
-  doesn't need to change, since photos are just stored as a URL string on each record.
+- **Uploaded photos are not persistent unless Supabase Storage is configured** (see step 8
+  above) — without it, Render's ephemeral disk means photos are lost on redeploy or restart.
 - **Supabase free tier** pauses a project after a week of no API requests; visiting the dashboard
   or hitting the API wakes it back up within a minute or two.
 
