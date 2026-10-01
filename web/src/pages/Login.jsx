@@ -86,6 +86,10 @@ export default function Login() {
             ))}
           </div>
         </div>
+
+        <p className="mt-6 text-center text-[11px] tracking-wide text-slate-300">
+          Powered by Ankura
+        </p>
       </div>
     </div>
   );

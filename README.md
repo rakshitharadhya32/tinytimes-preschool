@@ -1,11 +1,12 @@
-# TinyTimes Preschool (starter)
+# Ankura — school & childcare management platform
 
-A working first version of a Kriyo-style school & childcare management app, inspired by
-[ikriyo.com](https://ikriyo.com/) and branded for "TinyTimes Preschool". This is the "core admin
-essentials" slice: enrollment pipeline, student & staff records, attendance check-in/out, and
-parent-facing announcements — built as one responsive React app (desktop dashboard for
-admin/staff, installable mobile PWA experience for parents) on top of a Node/Express +
-PostgreSQL backend.
+**Ankura** is the underlying platform (the "Kriyo" to this project's own ikriyo.com, so to
+speak); this repo's demo instance is branded and seeded for a specific school, **"TinyTimes
+Preschool"** — same way any real preschool would run Ankura under its own name and logo. This is
+the "core admin essentials" slice: enrollment pipeline, student & staff records, attendance
+check-in/out, and parent-facing announcements — built as one responsive React app (desktop
+dashboard for admin/staff, installable mobile PWA experience for parents) on top of a
+Node/Express + PostgreSQL backend.
 
 **Want to put this online for free?** See [DEPLOY.md](./DEPLOY.md) for a step-by-step guide
 using Supabase (database) + Render (backend) + Vercel (frontend) — all free tiers, no credit
