@@ -111,9 +111,9 @@ backend, so you only need to visit the one URL.
 
 | Role   | Email               |
 |--------|---------------------|
-| Admin  | admin@kriyo.demo    |
-| Staff  | staff@kriyo.demo    |
-| Parent | parent@kriyo.demo   |
+| Admin  | admin@tinytimes.demo    |
+| Staff  | staff@tinytimes.demo    |
+| Parent | parent@tinytimes.demo   |
 
 The demo parent is linked to two of the seeded enrolled children so you can see the parent
 attendance/feed views populated.

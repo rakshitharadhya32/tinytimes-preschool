@@ -17,7 +17,7 @@ async function seed() {
     .values({
       schoolId: school.id,
       name: 'Anitha',
-      email: 'admin@kriyo.demo',
+      email: 'admin@tinytimes.demo',
       passwordHash,
       role: 'admin',
       title: 'Director',
@@ -30,7 +30,7 @@ async function seed() {
     .values({
       schoolId: school.id,
       name: 'Meera Nair',
-      email: 'staff@kriyo.demo',
+      email: 'staff@tinytimes.demo',
       passwordHash,
       role: 'staff',
       title: 'Lead Teacher, Sunflower Room',
@@ -70,7 +70,7 @@ async function seed() {
     .values({
       schoolId: school.id,
       name: 'Rakshith Kumar',
-      email: 'parent@kriyo.demo',
+      email: 'parent@tinytimes.demo',
       passwordHash,
       role: 'parent',
       phone: '+91 90000 00003',
@@ -117,9 +117,9 @@ async function seed() {
 
   console.log('Seed complete.');
   console.log('Demo logins (password: password123):');
-  console.log('  admin@kriyo.demo   (admin)');
-  console.log('  staff@kriyo.demo   (staff)');
-  console.log('  parent@kriyo.demo  (parent)');
+  console.log('  admin@tinytimes.demo   (admin)');
+  console.log('  staff@tinytimes.demo   (staff)');
+  console.log('  parent@tinytimes.demo  (parent)');
 }
 
 seed()

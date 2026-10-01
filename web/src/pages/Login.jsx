@@ -3,15 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const demoAccounts = [
-  { label: 'Admin', email: 'admin@kriyo.demo' },
-  { label: 'Staff', email: 'staff@kriyo.demo' },
-  { label: 'Parent', email: 'parent@kriyo.demo' },
+  { label: 'Admin', email: 'admin@tinytimes.demo' },
+  { label: 'Staff', email: 'staff@tinytimes.demo' },
+  { label: 'Parent', email: 'parent@tinytimes.demo' },
 ];
 
 export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState('admin@kriyo.demo');
+  const [email, setEmail] = useState('admin@tinytimes.demo');
   const [password, setPassword] = useState('password123');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);

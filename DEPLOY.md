@@ -119,9 +119,9 @@ Open your Vercel URL and log in with the seeded demo accounts (password `passwor
 
 | Role   | Email               |
 |--------|---------------------|
-| Admin  | admin@kriyo.demo    |
-| Staff  | staff@kriyo.demo    |
-| Parent | parent@kriyo.demo   |
+| Admin  | admin@tinytimes.demo    |
+| Staff  | staff@tinytimes.demo    |
+| Parent | parent@tinytimes.demo   |
 
 ---
 
